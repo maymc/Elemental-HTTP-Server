@@ -87,7 +87,7 @@ const server = http.createServer((req, res) => {
     res.end();
   }
 
-  console.log("here:", givenURLs);
+  console.log("check givenURLs:", givenURLs);
 
   if (req.method === "GET") {
     if (req.url === "/css/styles.css") {
@@ -105,12 +105,6 @@ const server = http.createServer((req, res) => {
         fs.readFile(`./public/${req.url}`, "utf-8", callback);
       }
     }
-    // else if (req.url === "/hydrogen") {
-    //   fs.readFile("./public/hydrogen.html", "utf-8", callback);
-    // }
-    // else if (req.url === "/") {
-    //   fs.readFile("./public/index.html", "utf-8", callback);
-    // }
     else if (req.url === "/404.html") {
       fs.readFile("./public/404.html", "utf-8", callback404);
     }

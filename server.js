@@ -23,17 +23,36 @@ const server = http.createServer((req, res) => {
           //console.log("data body:", body);
         })
         .on('end', chunk => {
-          //'body' has entire request body stored in it as a string
+          //'body' has entire request body stored in it as a string. Need to convert buffer to utf-8/to a string
           body = Buffer.concat(body).toString();
           console.log("end body:", body);
 
+          //Parse the body into key value pairs
           let parsedBody = qs.parse(body);
           console.log("parsedBody:\n", parsedBody);
 
-          const resBodyContents = `<html>..${parsedBody.elementStatus}..`;
+          //Set the content of the response body
+          const resBodyContent = `<!DOCTYPE html>
+          <html lang="en">
+          
+          <head>
+            <meta charset="UTF-8">
+            <title>The Elements - ${parsedBody.elementName}</title>
+            <link rel="stylesheet" href="/css/styles.css">
+          </head>
+          
+          <body>
+            <h1>${parsedBody.elementName}</h1>
+            <h2>${parsedBody.elementSymbol}</h2>
+            <h3>Atomic number ${parsedBody.elementAtomicNumber}</h3>
+            <p>${parsedBody.elementName} is a chemical element with chemical symbol ${parsedBody.elementSymbol} and atomic number ${parsedBody.elementAtomicNumber}.</p>
+            <p><a href="/">back</a></p>
+          </body>
+
+          </html>`;
 
           fs.writeFile(`./public/${parsedBody.elementName}.html`,
-            resBodyContents, err => {
+            resBodyContent, err => {
               if (err) {
                 res.writeHead(500);
                 res.write('{status: stay broke}');

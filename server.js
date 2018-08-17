@@ -31,7 +31,7 @@ const server = http.createServer((req, res) => {
       fs.readFile("./public/hydrogen.html", "utf-8", callback);
     }
     else if (req.url === "/") {
-      fs.readFile("./public/index", "utf-8", callback);
+      fs.readFile("./public/index.html", "utf-8", callback);
     }
     else {
       fs.readFile("./public/404.html", "utf-8", (err, data) => {

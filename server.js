@@ -3,6 +3,7 @@ const http = require('http');
 const PORT = process.env.PORT || 8000;
 const fs = require('fs');
 const qs = require('querystring');
+let givenURLs = ["/helium.html", "/hydrogen.html", "/"];
 
 const server = http.createServer((req, res) => {
   console.log('\nreq method:', req.method);
@@ -30,6 +31,9 @@ const server = http.createServer((req, res) => {
           //Parse the body into key value pairs
           let parsedBody = qs.parse(body);
           console.log("parsedBody:\n", parsedBody);
+
+          givenURLs.push(`/${parsedBody.elementName}.html`);
+          console.log("new GivenURLs:", givenURLs);
 
           //Set the content of the response body
           const resBodyContent = `<!DOCTYPE html>
@@ -76,6 +80,14 @@ const server = http.createServer((req, res) => {
     res.write(data);
     res.end();
   }
+  let callback404 = (err, data) => {
+    let statusCode = 404
+    res.writeHead(statusCode, { "Content-Type": "text/html" });
+    res.write(data);
+    res.end();
+  }
+
+  console.log("here:", givenURLs);
 
   if (req.method === "GET") {
     if (req.url === "/css/styles.css") {
@@ -85,28 +97,25 @@ const server = http.createServer((req, res) => {
         res.end();
       });
     }
-    else if (req.url === "/helium") {
-      fs.readFile("./public/helium.html", "utf-8", callback);
+    else if (givenURLs.includes(req.url)) {
+      if (req.url === "/") {
+        fs.readFile(`./public/index.html`, "utf-8", callback);
+      }
+      else {
+        fs.readFile(`./public/${req.url}`, "utf-8", callback);
+      }
     }
-    else if (req.url === "/hydrogen") {
-      fs.readFile("./public/hydrogen.html", "utf-8", callback);
-    }
-    else if (req.url === "/") {
-      fs.readFile("./public/index.html", "utf-8", callback);
-    }
-    else if (req.url === "/404") {
-      fs.readFile("./public/404.html", "utf-8", (err, data) => {
-        res.writeHead(404, { "Content-Type": "text/html" });
-        res.write(data);
-        res.end();
-      })
+    // else if (req.url === "/hydrogen") {
+    //   fs.readFile("./public/hydrogen.html", "utf-8", callback);
+    // }
+    // else if (req.url === "/") {
+    //   fs.readFile("./public/index.html", "utf-8", callback);
+    // }
+    else if (req.url === "/404.html") {
+      fs.readFile("./public/404.html", "utf-8", callback404);
     }
     else {
-      fs.readFile("./public/404.html", "utf-8", (err, data) => {
-        res.writeHead(404, { "Content-Type": "text/html" });
-        res.write(data);
-        res.end();
-      })
+      fs.readFile("./public/404.html", "utf-8", callback404);
     }
   }
 

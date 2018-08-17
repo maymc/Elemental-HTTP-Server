@@ -1,0 +1,6 @@
+//Create the HTTP server instance
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+
+});

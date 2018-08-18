@@ -93,7 +93,7 @@ const server = http.createServer((req, res) => {
         elementsArr.push(`${parsedBody.elementName}`);
         console.log("new elements arr:", elementsArr);
 
-        //Set the content of the response body
+        //Set the content of the response body for the new element html file
         const resBodyContent = `<!DOCTYPE html>
           <html lang="en">
           <head>
@@ -109,6 +109,19 @@ const server = http.createServer((req, res) => {
             <p><a href="/">back</a></p>
           </body>
           </html>`;
+
+        //Save the new element html file in the public directory
+        fs.writeFile(`./public/${parsedBody.elementName.toLowerCase()}.html`, resBodyContent, err => {
+          if (err) {
+            res.writeHead(404, { "Content-Type": "application/json" }, { "Success": false });
+            res.write('{Success: false}');
+            res.end();
+          }
+          else {
+            //Cannot include res.write() or res.end() as we want to fs.writeFile to update a new index.html. You cannot do a 'write after end' meaning you cannot write a second file
+            res.writeHead(200, { "Content-Type": "application/json" }, { "Success": true });
+          }
+        });
 
         /****** NEW INDEX.HTML *****/
         //Function to create a new list of elements on the index.html page. This is for auto updating the index
@@ -128,13 +141,11 @@ const server = http.createServer((req, res) => {
         //Set the content of the new index body
         let newIndexBody = `<!DOCTYPE html>
           <html lang="en">
-          
           <head>
             <meta charset="UTF-8">
             <title>The Elements</title>
             <link rel="stylesheet" href="/css/styles.css">
           </head>
-          
           <body>
             <h1>The Elements</h1>
             <h2>These are all the known elements.</h2>
@@ -143,27 +154,10 @@ const server = http.createServer((req, res) => {
             ${updatedList(givenURLs, elementsArr)}
             </ol>
           </body>
-          
           </html>`;
 
         //Function to save the new index.html file in the public directory
-        let createNewIndex = () => {
-          fs.writeFile(`./public/index.html`, newIndexBody, err => {
-            if (err) {
-              res.writeHead(404, { "Content-Type": "application/json" }, { "Success": false });
-              res.write('{Success: false}');
-              res.end();
-            }
-            else {
-              res.writeHead(200, { "Content-Type": "application/json" }, { "Success": true });
-              res.write('{Success: true}');
-              res.end();
-            }
-          });
-        }
-
-        //Save the html file in the public directory and run the createNewIndex function to update the index page
-        fs.writeFile(`./public/${parsedBody.elementName.toLowerCase()}.html`, resBodyContent, createNewIndex(), err => {
+        fs.writeFile(`./public/index.html`, newIndexBody, err => {
           if (err) {
             res.writeHead(404, { "Content-Type": "application/json" }, { "Success": false });
             res.write('{Success: false}');
@@ -171,13 +165,13 @@ const server = http.createServer((req, res) => {
           }
           else {
             res.writeHead(200, { "Content-Type": "application/json" }, { "Success": true });
+            res.write('{Success: true}');
+            res.end();
           }
         });
       });
     }
   }
-
-
 
 });
 

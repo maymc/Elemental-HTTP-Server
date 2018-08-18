@@ -11,13 +11,66 @@ const server = http.createServer((req, res) => {
   console.log('req.headers:', req.headers);
   console.log('req.url:', req.url);
 
-  /****** POST *****/
-  if (req.method === "POST") {
+  /****** GET *****/
+  if (req.method === "GET") {
 
+    //Callback function for files that pass
+    let callback = (err, data) => {
+      let statusCode = 200;
+      res.writeHead(statusCode, { "Content-Type": "text/html" });
+      res.write(data);
+      res.end();
+    }
+
+    //Error callback function
+    let callback404 = (err, data) => {
+      let statusCode = 404;
+      res.writeHead(statusCode, { "Content-Type": "text/html" });
+      res.write(data);
+      res.end();
+    }
+
+    //DEBUG - check the givenURLs
+    console.log("Check givenURLs:", givenURLs);
+
+    //If the file is a css file, get the css file
+    if (req.url === "/css/styles.css") {
+      fs.readFile("./public/css/styles.css", "utf-8", (err, data) => {
+        res.writeHead(200, { "Content-Type": "text/css" });
+        res.write(data);
+        res.end();
+      });
+    }
+    //Else if user requested for a specific element page, get the element page
+    else if (givenURLs.includes(req.url)) {
+      //If no uri is given, provide the index page
+      if (req.url === "/") {
+        fs.readFile(`./public/index.html`, "utf-8", callback);
+      }
+      //Else provide the specified page
+      else {
+        fs.readFile(`./public/${req.url}`, "utf-8", callback);
+      }
+    }
+    //Else if user requests for 404 page, call the error callback function and provide the 404 page
+    else if (req.url === "/404.html") {
+      fs.readFile("./public/404.html", "utf-8", callback404);
+    }
+    //Else, if the user types in anything else, call the 404 page
+    else {
+      fs.readFile("./public/404.html", "utf-8", callback404);
+    }
+  }
+
+  /****** POST *****/
+  else if (req.method === "POST") {
+
+    //HTTP client can issue POST Requests to a specific route using uri: /elements. So if the user types in /elements, this will run
     if (req.url === "/elements") {
-      //Store string data into an array
+
+      //Based on 'https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction/', if we know the data will be a string, store string data into an array
       let body = [];
-      //On the 'data' event, push chunk into the body array. 'Chunk' is a Buffer
+      //On the 'data' event, push chunk into the body array. 'Chunk' is a Buffer so expect numbers and letters
       req.on('data', chunk => {
         //console.log("\nchunk:", chunk);
         body.push(chunk);
@@ -32,9 +85,11 @@ const server = http.createServer((req, res) => {
         let parsedBody = qs.parse(body);
         console.log("parsedBody:\n", parsedBody);
 
+        //Push the new element html page into the givenURLs, make sure it is lowercase
         givenURLs.push(`/${parsedBody.elementName.toLowerCase()}.html`);
         console.log("new GivenURLs:", givenURLs);
 
+        //Push the new element name into the elementsArr for the index
         elementsArr.push(`${parsedBody.elementName}`);
         console.log("new elements arr:", elementsArr);
 
@@ -50,7 +105,7 @@ const server = http.createServer((req, res) => {
             <h1>${parsedBody.elementName}</h1>
             <h2>${parsedBody.elementSymbol}</h2>
             <h3>Atomic number ${parsedBody.elementAtomicNumber}</h3>
-            <p>${parsedBody.elementDescription}</p>
+            <p>${parsedBody.elementName} is a chemical element with symbol ${parsedBody.elementSymbol} and atomic number ${parsedBody.elementAtomicNumber}. Because ${parsedBody.elementName.toLowerCase()} is produced entirely by cosmic ray spallation and not by stellar nucleosynthesis it is a low-abundance element in both the Solar system and the Earth's crust.[12] ${parsedBody.elementName} is concentrated on Earth by the water-solubility of its more common naturally occurring compounds, the borate minerals. These are mined industrially as evaporites, such as borax and kernite. The largest proven boron deposits are in Turkey, which is also the largest producer of ${parsedBody.elementName.toLowerCase()} minerals.</p>
             <p><a href="/">back</a></p>
           </body>
           </html>`;
@@ -122,47 +177,7 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  /****** GET *****/
-  else if (req.method === "GET") {
 
-    let callback = (err, data) => {
-      let statusCode = 200;
-      res.writeHead(statusCode, { "Content-Type": "text/html" });
-      res.write(data);
-      res.end();
-    }
-    let callback404 = (err, data) => {
-      let statusCode = 404
-      res.writeHead(statusCode, { "Content-Type": "text/html" });
-      res.write(data);
-      res.end();
-    }
-
-    console.log("check givenURLs:", givenURLs);
-
-    // if (req.method === "GET") {
-    if (req.url === "/css/styles.css") {
-      fs.readFile("./public/css/styles.css", "utf-8", (err, data) => {
-        res.writeHead(200, { "Content-Type": "text/css" });
-        res.write(data);
-        res.end();
-      });
-    }
-    else if (givenURLs.includes(req.url)) {
-      if (req.url === "/") {
-        fs.readFile(`./public/index.html`, "utf-8", callback);
-      }
-      else {
-        fs.readFile(`./public/${req.url}`, "utf-8", callback);
-      }
-    }
-    else if (req.url === "/404.html") {
-      fs.readFile("./public/404.html", "utf-8", callback404);
-    }
-    else {
-      fs.readFile("./public/404.html", "utf-8", callback404);
-    }
-  }
 
 });
 

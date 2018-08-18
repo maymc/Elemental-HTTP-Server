@@ -172,7 +172,59 @@ const server = http.createServer((req, res) => {
       });
     }
   }
+  else if (req.method === "PUT") {
+    //If the requested url exists
+    if (givenURLs.includes(req.url)) {
+      let bodyPUT = [];
 
+      req.on('data', chunk => {
+        bodyPUT.push(chunk);
+
+      }).on('end', () => {
+        bodyPUT = Buffer.concat(bodyPUT).toString();
+
+        let parsedBodyPUT = qs.parse(bodyPUT);
+        console.log("parsedBodyPUT:\n", parsedBodyPUT);
+
+        //Set the updated content to populate the requested html file
+        const resBodyContentPUT = `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>The Elements - ${parsedBodyPUT.elementName}</title>
+          <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+          <h1>${parsedBodyPUT.elementName}</h1>
+          <h2>${parsedBodyPUT.elementSymbol}</h2>
+          <h3>Atomic number ${parsedBodyPUT.elementAtomicNumber}</h3>
+          <p>${parsedBodyPUT.elementName} is a chemical element with symbol ${parsedBodyPUT.elementSymbol} and atomic number ${parsedBodyPUT.elementAtomicNumber}. Because ${parsedBodyPUT.elementName.toLowerCase()} is produced entirely by cosmic ray spallation and not by stellar nucleosynthesis it is a low-abundance element in both the Solar system and the Earth's crust.[12] ${parsedBodyPUT.elementName} is concentrated on Earth by the water-solubility of its more common naturally occurring compounds, the borate minerals. These are mined industrially as evaporites, such as borax and kernite. The largest proven boron deposits are in Turkey, which is also the largest producer of ${parsedBodyPUT.elementName.toLowerCase()} minerals.</p>
+          <p><a href="/">back</a></p>
+        </body>
+        </html>`;
+
+        //writeFile to update the requested html file
+        fs.writeFile(`./public/${req.url}`, resBodyContentPUT, err => {
+          if (err) {
+            res.writeHead(500, { "Content-Type": "application/json" }, { "error": "resource /carbon.html does not exist" });
+            res.write('{Success: false}');
+            res.end();
+          }
+          else {
+            res.writeHead(200, { "Content-Type": "application/json" }, `{ "Success": true }`);
+            res.write('{Success: true}');
+            res.end();
+          }
+        });
+      });
+    }
+    //Else, if requested url doesn't exist, return 500 server error
+    else {
+      res.writeHead(500, { "Content-Type": "application/json" }, { "error": "resource /carbon.html does not exist" });
+      res.write('{Success: false}');
+      res.end();
+    }
+  }
 });
 
 server.listen(PORT, () => {

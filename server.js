@@ -229,9 +229,17 @@ const server = http.createServer((req, res) => {
     if (givenURLs.includes(req.url)) {
       fs.unlink(`./public/${req.url}`, err => {
         if (err) throw err;
-        console.log(`${req.url} was deleted`);
-        console.log("givenURLs after delete:", givenURLs);
-        console.log("elements after delete:", elementsArr);
+        else {
+          console.log(`${req.url} was deleted`);
+          console.log("givenURLs after delete:", givenURLs);
+          console.log("elements after delete:", elementsArr);
+          let URLIndex = givenURLs.indexOf(req.url);
+          givenURLs.splice(URLIndex, 1);
+          let elementIndex = elementsArr.indexOf(req.url);
+          elementsArr.splice(elementIndex, 1);
+          console.log("givenURLs after delete:", givenURLs);
+          console.log("elements after delete:", elementsArr);
+        }
       })
     }
     else {

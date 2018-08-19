@@ -220,7 +220,22 @@ const server = http.createServer((req, res) => {
     }
     //Else, if requested url doesn't exist, return 500 server error
     else {
-      res.writeHead(500, { "Content-Type": "application/json" }, { "error": "resource /carbon.html does not exist" });
+      res.writeHead(500, { "Content-Type": "application/json" }, { "error": "requested url does not exist" });
+      res.write('{Success: false}');
+      res.end();
+    }
+  }
+  else if (req.method === "DELETE") {
+    if (givenURLs.includes(req.url)) {
+      fs.unlink(`./public/${req.url}`, err => {
+        if (err) throw err;
+        console.log(`${req.url} was deleted`);
+        console.log("givenURLs after delete:", givenURLs);
+        console.log("elements after delete:", elementsArr);
+      })
+    }
+    else {
+      res.writeHead(500, { "Content-Type": "application/json" }, { "error": "requested url does not exist" });
       res.write('{Success: false}');
       res.end();
     }

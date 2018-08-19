@@ -1,4 +1,4 @@
-//Create the HTTP server instance
+//Declare requirements
 const http = require('http');
 const PORT = process.env.PORT || 8000;
 const fs = require('fs');
@@ -6,12 +6,17 @@ const qs = require('querystring');
 let givenURLs = ["/", "/hydrogen.html", "/helium.html"];
 let elementsArr = [, "Hydrogen", "Helium"];
 
+/***********************************************/
+/****** Create an instance of http.server ******/
+/***********************************************/
 const server = http.createServer((req, res) => {
   console.log('\nreq method:', req.method);
   console.log('req.headers:', req.headers);
   console.log('req.url:', req.url);
 
-  /****** GET *****/
+  /*****************/
+  /****** GET ******/
+  /*****************/
   if (req.method === "GET") {
 
     //Callback function for files that pass
@@ -62,7 +67,9 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  /*****************/
   /****** POST *****/
+  /*****************/
   else if (req.method === "POST") {
 
     //HTTP client can issue POST Requests to a specific route using uri: /elements. So if the user types in /elements, this will run
@@ -169,9 +176,14 @@ const server = http.createServer((req, res) => {
             res.end();
           }
         });
+        /**************************/
       });
     }
   }
+
+  /*****************/
+  /****** PUT ******/
+  /*****************/
   else if (req.method === "PUT") {
     //If the requested url exists
     if (givenURLs.includes(req.url)) {
@@ -225,20 +237,71 @@ const server = http.createServer((req, res) => {
       res.end();
     }
   }
+
+  /********************/
+  /****** DELETE ******/
+  /********************/
   else if (req.method === "DELETE") {
     if (givenURLs.includes(req.url)) {
+      console.log("givenURLs before delete:", givenURLs);
+      console.log("elements before delete:", elementsArr);
+
       fs.unlink(`./public/${req.url}`, err => {
         if (err) throw err;
         else {
           console.log(`${req.url} was deleted`);
-          console.log("givenURLs after delete:", givenURLs);
-          console.log("elements after delete:", elementsArr);
+
           let URLIndex = givenURLs.indexOf(req.url);
           givenURLs.splice(URLIndex, 1);
-          let elementIndex = elementsArr.indexOf(req.url);
-          elementsArr.splice(elementIndex, 1);
+          elementsArr.splice(URLIndex, 1);
           console.log("givenURLs after delete:", givenURLs);
           console.log("elements after delete:", elementsArr);
+
+          /***** NEW INDEX.HTML ******/
+          let listOfElements = ``; //empty template literal string
+          let updatedList = (arr1, arr2) => {
+            for (let i = 0; i < arr1.length; i++) {
+              if (arr1[i] !== "/") {
+                listOfElements += `
+                <li>
+                <a href="${arr1[i]}">${arr2[i]}</a>
+                </li>\r`;
+              };
+            };
+            return listOfElements;
+          };
+          //Set the content of the new index body
+          let newIndexBodyDELETE = `<!DOCTYPE html>
+                  <html lang="en">
+                  <head>
+                    <meta charset="UTF-8">
+                    <title>The Elements</title>
+                    <link rel="stylesheet" href="/css/styles.css">
+                  </head>
+                  <body>
+                    <h1>The Elements</h1>
+                    <h2>These are all the known elements.</h2>
+                    <h3>These are ${givenURLs.length - 1}</h3>
+                    <ol>
+                    ${updatedList(givenURLs, elementsArr)}
+                    </ol>
+                  </body>
+                  </html>`;
+
+          //Function to save the new index.html file in the public directory
+          fs.writeFile(`./public/index.html`, newIndexBodyDELETE, err => {
+            if (err) {
+              res.writeHead(404, { "Content-Type": "application/json" }, { "Success": false });
+              res.write('{Success: false}');
+              res.end();
+            }
+            else {
+              res.writeHead(200, { "Content-Type": "application/json" }, { "Success": true });
+              res.write('{Success: true}');
+              res.end();
+            }
+          });
+          /****************************/
         }
       })
     }
